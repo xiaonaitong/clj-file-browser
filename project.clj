@@ -7,5 +7,7 @@
                  [seesaw "1.4.2"]
                  [com.jgoodies/looks "2.2.2"]]
   :java-source-path "jvm"
+  :java-source-paths ["jvm"]
   :resources-path "resources"
+  :resource-paths ["resources"]
   :main clj-file-browser.core)

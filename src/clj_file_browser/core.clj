@@ -5,17 +5,27 @@
   (:use clojure.java.io)
   (:use seesaw.mig)
   (:import javax.swing.SwingConstants
-           java.io.File))
+           java.io.File
+           clj_file_browser.WrapLayout))
+
+(defn wrap-panel
+  [& opts]
+  (abstract-panel (WrapLayout.) opts))
 
 (def browser (frame :title "File browser" :on-close :dispose))
 
 (config! browser :size [600 :by 600])
 
 (config! browser :content (left-right-split (tree :id :dirs)
-                                            (scrollable (mig-panel :id :files
-                                                                   :constraints ["wrap 4" "" ""])
+                                            (scrollable (wrap-panel :id :files)
                                                         :hscroll :never)
                                                   :one-touch-expandable? true))
+
+(comment (config! browser :content (left-right-split (tree :id :dirs)
+                                                     (scrollable (mig-panel :id :files
+                                                                            :constraints ["wrap 4" "" ""])
+                                                                 :hscroll :never)
+                                                     :one-touch-expandable? true)))
 
 (def root (java.io.File. "."))
 
