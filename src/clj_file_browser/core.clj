@@ -1,10 +1,12 @@
 (ns clj-file-browser.core
   (:gen-class)
-  (:use (seesaw core tree))
+  (:use (seesaw core tree mig))
+  (:use [seesaw.selection :only [Selection]])
   (:require [seesaw.bind :as b])
   (:use clojure.java.io)
-  (:use seesaw.mig)
   (:import javax.swing.SwingConstants
+           javax.swing.tree.TreePath
+           javax.swing.JTree
            java.io.File
            clj_file_browser.WrapLayout))
 
@@ -21,12 +23,6 @@
                                                         :hscroll :never)
                                                   :one-touch-expandable? true))
 
-(comment (config! browser :content (left-right-split (tree :id :dirs)
-                                                     (scrollable (mig-panel :id :files
-                                                                            :constraints ["wrap 4" "" ""])
-                                                                 :hscroll :never)
-                                                     :one-touch-expandable? true)))
-
 (def root (java.io.File. "."))
 
 (config! (select browser [:#dirs]) :model (simple-tree-model #(.isDirectory %) #(->> % .listFiles (filter (memfn isDirectory) )) (java.io.File. ".")))
@@ -42,8 +38,10 @@
        (proxy-super setText (.getName value)))
      this)))
 
+(declare path-to)
 (defn refresh-files-view [files]
-  (let [files-pane (select browser [:#files])]
+  (let [files-pane (select browser [:#files])
+        tree-view (select browser [:#dirs])]
     (.removeAll files-pane)
     (doseq [f files]
       (let [file-icon (-> (if (.isDirectory f)
@@ -62,21 +60,21 @@
                            (when (and (= (.getClickCount e) 2)
                                     (not (.isConsumed e))
                                     (.isDirectory f))
-                             (refresh-files-view (.listFiles f))))]))))
+                             (selection! tree-view (path-to f root))))]))))
     (doto files-pane
       (.revalidate )
       (.repaint))))
 
+(extend-protocol Selection
+  javax.swing.JTree
+    (get-selection [target] (seq (map #(seq (.getPath ^javax.swing.tree.TreePath %)) (.getSelectionPaths target))))
+    (set-selection [target [v :as args]]
+      (if (seq args)
+        (.setSelectionPath target (TreePath. (to-array v)))
+        (.clearSelection target))))
+
 (defn path-to [from to]
-  (let [path (.getAbsolutePath from)
-        topath (.getAbsolutePath to)
-        separator (File/separator)]
-    (map file (loop [p path r []]
-                (if (= p topath)
-                  r
-                  (let [pos (.lastIndexOf p separator)
-                        parent (.substring p 0 pos)]
-                    (recur parent (conj r parent))))))))
+  (reverse (take-while identity (iterate #(.getParentFile %) from))))
 
 (def b1 (b/bind
          (b/selection (select browser [:#dirs]))
@@ -86,15 +84,6 @@
                             (when (.isDirectory current)
                               (vec (.listFiles current)))))))
          (b/b-do* refresh-files-view)))
-
-(comment (def b2 (b/bind
-          (b/selection (select browser [:#dirs]))
-          (b/transform (fn [files]
-                         (when (seq files)
-                           (let [current (last files)]
-                             (when (.isDirectory current)
-                               (vec (map #(.getName %) (.listFiles current))))))))
-          (b/property (select browser [:#files]) :model))))
 
 (defn -main [& args]
   (-> browser
