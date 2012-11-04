@@ -1,15 +1,13 @@
 # clj-file-browser
 
-I'm an app. Or maybe I'm a library? I haven't decided yet. 
-
-The choice is up to you!
+This is a simple demo of seesaw usage for my introduction to seesaw presentation
 
 ## Usage
 
-FIXME
+lein run
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2012 xiaonaitong
 
 Distributed under the Eclipse Public License, the same as Clojure.
