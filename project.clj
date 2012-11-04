@@ -1,5 +1,5 @@
 (defproject clj-file-browser "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "a demo for seesaw introduction"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
